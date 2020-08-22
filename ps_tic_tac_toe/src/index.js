@@ -111,7 +111,16 @@ class Game extends React.Component {
       return (
         // In this case the move (step number as index) is sufficient because users cannot reorder moves
         <li key={move}>
-          <button onClick={() => this.jumpTo(move)}>{desc}</button>
+          {move === this.state.stepNumber ? (
+            <button
+              style={{ fontWeight: "bold" }}
+              onClick={() => this.jumpTo(move)}
+            >
+              {desc}
+            </button>
+          ) : (
+            <button onClick={() => this.jumpTo(move)}>{desc}</button>
+          )}
         </li>
       );
     });
