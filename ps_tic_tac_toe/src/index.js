@@ -51,6 +51,8 @@ class Game extends React.Component {
       history: [
         {
           squares: Array(9).fill(null),
+          col: null,
+          row: null,
         },
       ],
       stepNumber: 0,
@@ -71,6 +73,9 @@ class Game extends React.Component {
       history: history.concat([
         {
           squares: squares,
+          col: i % 3,
+          row: Math.floor(i / 3),
+          player: squares[i],
         },
       ]),
       stepNumber: history.length,
@@ -91,8 +96,18 @@ class Game extends React.Component {
     const current = history[this.state.stepNumber];
     const winner = calculateWinner(current.squares);
 
-    const moves = history.map((_step, move) => {
-      const desc = move ? "Go to move #" + move : "Go to game start";
+    const moves = history.map((step, move) => {
+      const desc = move
+        ? "Go to move #" +
+          move +
+          " where " +
+          step.player +
+          " moved on (" +
+          step.col +
+          ", " +
+          step.row +
+          ")"
+        : "Go to game start";
       return (
         // In this case the move (step number as index) is sufficient because users cannot reorder moves
         <li key={move}>
