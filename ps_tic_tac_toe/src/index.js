@@ -53,12 +53,14 @@ class Game extends React.Component {
           squares: Array(9).fill(null),
         },
       ],
+      stepNumber: 0,
       xIsNext: true,
     };
   }
 
   handleClick(i) {
-    const history = this.state.history;
+    // If user goes back and adds a new move, erase all future steps
+    const history = this.state.history.slice(0, this.state.stepNumber + 1);
     const current = history[history.length - 1];
     const squares = current.squares.slice();
     // Optimize by not re-rendering if someone already won or if user clicked on the particular Square already
@@ -71,14 +73,34 @@ class Game extends React.Component {
           squares: squares,
         },
       ]),
+      stepNumber: history.length,
       xIsNext: !this.state.xIsNext,
     });
   }
+
+  jumpTo(step) {
+    this.setState({
+      stepNumber: step,
+      xIsNext: step % 2 === 0,
+    });
+  }
+
   render() {
     const history = this.state.history;
-    // Get the latest history as the current game board to display
-    const current = history[history.length - 1];
+    // Get the current based on where in history the user is
+    const current = history[this.state.stepNumber];
     const winner = calculateWinner(current.squares);
+
+    const moves = history.map((_step, move) => {
+      const desc = move ? "Go to move #" + move : "Go to game start";
+      return (
+        // In this case the move (step number as index) is sufficient because users cannot reorder moves
+        <li key={move}>
+          <button onClick={() => this.jumpTo(move)}>{desc}</button>
+        </li>
+      );
+    });
+
     let status;
     if (winner) status = "Winner: " + winner;
     else status = "Next player: " + (this.state.xIsNext ? "X" : "O");
@@ -93,7 +115,7 @@ class Game extends React.Component {
         </div>
         <div className="game-info">
           <div>{status}</div>
-          <ol>{/* TODO */}</ol>
+          <ol>{moves}</ol>
         </div>
       </div>
     );
