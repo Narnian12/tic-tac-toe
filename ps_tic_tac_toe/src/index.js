@@ -39,7 +39,6 @@ class Board extends React.Component {
 }
 
 class Game extends React.Component {
-  // Lift state up to Game component which will trickel down to Board and finally Square components
   constructor(props) {
     super(props);
     this.state = {
@@ -52,6 +51,7 @@ class Game extends React.Component {
       ],
       stepNumber: 0,
       xIsNext: true,
+      reversed: false,
     };
   }
 
@@ -78,11 +78,49 @@ class Game extends React.Component {
     });
   }
 
-  jumpTo(step) {
+  jumpToHandler(step) {
     this.setState({
       stepNumber: step,
       xIsNext: step % 2 === 0,
     });
+  }
+
+  toggleHandler() {
+    // If not reversed before, put the beginning of the game at the end of the array
+    if (!this.state.reversed) {
+      const reversedHistory = this.state.history
+        .slice(1, this.state.history.length)
+        .reverse()
+        .concat([{ squares: Array(9).fill(null), col: null, row: null }]);
+      this.setState({
+        history: reversedHistory,
+        reversed: !this.state.reversed,
+      });
+    } else {
+      const reversedHistory = [
+        { squares: Array(9).fill(null), col: null, row: null },
+      ].concat(
+        this.state.history.slice(0, this.state.history.length - 1).reverse()
+      );
+      this.setState({
+        history: reversedHistory,
+        reversed: !this.state.reversed,
+      });
+    }
+  }
+
+  getDescription(getStep, step, move) {
+    return getStep
+      ? "Go to move #" +
+          move +
+          " where " +
+          step.player +
+          " moved on (" +
+          step.col +
+          ", " +
+          step.row +
+          ")"
+      : "Go to game start";
   }
 
   render() {
@@ -92,29 +130,28 @@ class Game extends React.Component {
     const winner = calculateWinner(current.squares);
 
     const moves = history.map((step, move) => {
-      const desc = move
-        ? "Go to move #" +
-          move +
-          " where " +
-          step.player +
-          " moved on (" +
-          step.col +
-          ", " +
-          step.row +
-          ")"
-        : "Go to game start";
+      let desc;
+      if (!this.state.reversed) desc = this.getDescription(move, step, move);
+      else {
+        desc = this.getDescription(
+          move !== this.state.history.length - 1,
+          step,
+          move
+        );
+      }
+
       return (
         // In this case the move (step number as index) is sufficient because users cannot reorder moves
         <li key={move}>
           {move === this.state.stepNumber ? (
             <button
               style={{ fontWeight: "bold" }}
-              onClick={() => this.jumpTo(move)}
+              onClick={() => this.jumpToHandler(move)}
             >
               {desc}
             </button>
           ) : (
-            <button onClick={() => this.jumpTo(move)}>{desc}</button>
+            <button onClick={() => this.jumpToHandler(move)}>{desc}</button>
           )}
         </li>
       );
@@ -123,6 +160,10 @@ class Game extends React.Component {
     let status;
     if (winner) status = "Winner: " + winner;
     else status = "Next player: " + (this.state.xIsNext ? "X" : "O");
+
+    const toggleButtonStyle = {
+      marginLeft: "8px",
+    };
 
     return (
       <div className="game">
@@ -133,7 +174,15 @@ class Game extends React.Component {
           />
         </div>
         <div className="game-info">
-          <div>{status}</div>
+          <div>
+            {status}
+            <button
+              onClick={() => this.toggleHandler()}
+              style={toggleButtonStyle}
+            >
+              Toggle
+            </button>
+          </div>
           <ol>{moves}</ol>
         </div>
       </div>
