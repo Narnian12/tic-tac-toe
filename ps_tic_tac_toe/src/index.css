@@ -18,7 +18,8 @@ ul {
   margin-bottom: 10px;
 }
 
-.square {
+.square,
+.win-square {
   background: #fff;
   border: 1px solid #999;
   float: left;
@@ -35,6 +36,10 @@ ul {
 
 .square:focus {
   outline: none;
+}
+
+.win-square {
+  background: cornflowerblue;
 }
 
 .kbd-navigation .square:focus {
