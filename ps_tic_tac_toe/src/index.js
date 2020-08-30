@@ -56,23 +56,41 @@ class Game extends React.Component {
   }
 
   handleClick(i) {
-    // If user goes back and adds a new move, erase all future steps
-    const history = this.state.history.slice(0, this.state.stepNumber + 1);
-    const current = history[history.length - 1];
+    // If user goes back and adds a new move, erase all future moves
+    const history = !this.state.reversed
+      ? this.state.history.slice(0, this.state.stepNumber + 1)
+      : this.state.history
+          .reverse()
+          .slice(0, this.state.stepNumber + 1)
+          .reverse();
+
+    const current = !this.state.reversed
+      ? history[history.length - 1]
+      : history[0];
+
     const squares = current.squares.slice();
     // Optimize by not re-rendering if someone already won or if user clicked on the particular Square already
     if (calculateWinner(squares) || squares[i]) return;
     squares[i] = this.state.xIsNext ? "X" : "O";
     this.setState({
       // Add on to history
-      history: history.concat([
-        {
-          squares: squares,
-          col: i % 3,
-          row: Math.floor(i / 3),
-          player: squares[i],
-        },
-      ]),
+      history: !this.state.reversed
+        ? history.concat([
+            {
+              squares: squares,
+              col: i % 3,
+              row: Math.floor(i / 3),
+              player: squares[i],
+            },
+          ])
+        : [
+            {
+              squares: squares,
+              col: i % 3,
+              row: Math.floor(i / 3),
+              player: squares[i],
+            },
+          ].concat(history),
       stepNumber: history.length,
       xIsNext: !this.state.xIsNext,
     });
@@ -80,33 +98,25 @@ class Game extends React.Component {
 
   jumpToHandler(step) {
     this.setState({
-      stepNumber: step,
-      xIsNext: step % 2 === 0,
+      stepNumber: !this.state.reversed
+        ? step
+        : this.state.history.length - 1 - step,
+      xIsNext: !this.state.reversed
+        ? step % 2 === 0
+        : (this.state.history.length - 1 - step) % 2 === 0,
     });
   }
 
+  // Reverses  the history array
   toggleHandler() {
-    // If not reversed before, put the beginning of the game at the end of the array
-    if (!this.state.reversed) {
-      const reversedHistory = this.state.history
-        .slice(1, this.state.history.length)
-        .reverse()
-        .concat([{ squares: Array(9).fill(null), col: null, row: null }]);
-      this.setState({
-        history: reversedHistory,
-        reversed: !this.state.reversed,
-      });
-    } else {
-      const reversedHistory = [
-        { squares: Array(9).fill(null), col: null, row: null },
-      ].concat(
-        this.state.history.slice(0, this.state.history.length - 1).reverse()
-      );
-      this.setState({
-        history: reversedHistory,
-        reversed: !this.state.reversed,
-      });
-    }
+    const reversedHistory = this.state.history
+      .slice(0, this.state.history.length)
+      .reverse();
+
+    this.setState({
+      history: reversedHistory,
+      reversed: !this.state.reversed,
+    });
   }
 
   getDescription(getStep, step, move) {
@@ -126,24 +136,29 @@ class Game extends React.Component {
   render() {
     const history = this.state.history;
     // Get the current based on where in history the user is
-    const current = history[this.state.stepNumber];
+    const current = !this.state.reversed
+      ? history[this.state.stepNumber]
+      : history[this.state.history.length - 1 - this.state.stepNumber];
+
     const winner = calculateWinner(current.squares);
 
+    // If the history array is reversed, count down instead of up
+    let reversedMove = this.state.history.length;
     const moves = history.map((step, move) => {
-      let desc;
-      if (!this.state.reversed) desc = this.getDescription(move, step, move);
-      else {
-        desc = this.getDescription(
-          move !== this.state.history.length - 1,
-          step,
-          move
-        );
-      }
+      reversedMove--;
+      const desc = !this.state.reversed
+        ? this.getDescription(move, step, move)
+        : this.getDescription(
+            move !== this.state.history.length - 1,
+            step,
+            reversedMove
+          );
 
       return (
         // In this case the move (step number as index) is sufficient because users cannot reorder moves
         <li key={move}>
-          {move === this.state.stepNumber ? (
+          {(!this.state.reversed && move === this.state.stepNumber) ||
+          (this.state.reversed && reversedMove === this.state.stepNumber) ? (
             <button
               style={{ fontWeight: "bold" }}
               onClick={() => this.jumpToHandler(move)}
@@ -161,10 +176,6 @@ class Game extends React.Component {
     if (winner) status = "Winner: " + winner;
     else status = "Next player: " + (this.state.xIsNext ? "X" : "O");
 
-    const toggleButtonStyle = {
-      marginLeft: "8px",
-    };
-
     return (
       <div className="game">
         <div className="game-board">
@@ -178,7 +189,7 @@ class Game extends React.Component {
             {status}
             <button
               onClick={() => this.toggleHandler()}
-              style={toggleButtonStyle}
+              style={{ marginLeft: "8px" }}
             >
               Toggle
             </button>
