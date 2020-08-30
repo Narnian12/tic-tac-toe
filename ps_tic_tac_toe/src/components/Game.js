@@ -21,7 +21,7 @@ function calculateWinner(squares) {
   return null;
 }
 
-function Game(props) {
+function Game() {
   const [gameState, setGameState] = useState({
     history: [
       {
