@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Board from "./Board";
 
-function calculateWinner(squares) {
+function calculateWinner(squares: Array<String>) {
   const lines = [
     [0, 1, 2],
     [3, 4, 5],
@@ -26,8 +26,9 @@ function Game() {
     history: [
       {
         squares: Array(9).fill(null),
-        col: null,
-        row: null,
+        col: -1,
+        row: -1,
+        player: null
       },
     ],
     stepNumber: 0,
@@ -35,7 +36,7 @@ function Game() {
     reversed: false,
   });
 
-  const handleClick = (i) => {
+  const handleClick = (i: number) => {
     // If user goes back and adds a new move while on a previous move, erase all future moves
     const history = !gameState.reversed
       ? gameState.history.slice(0, gameState.stepNumber + 1)
@@ -81,7 +82,7 @@ function Game() {
     });
   };
 
-  const jumpToHandler = (step) => {
+  const jumpToHandler = (step: any) => {
     setGameState({
       ...gameState,
       stepNumber: !gameState.reversed
@@ -105,7 +106,7 @@ function Game() {
     });
   };
 
-  const getDescription = (getStep, step, move) => {
+  const getDescription = (getStep: any, step: any, move: any) => {
     return getStep
       ? "Go to move #" +
           move +
@@ -170,8 +171,8 @@ function Game() {
       <div className="game-board">
         <Board
           squares={current.squares}
-          onClick={(i) => handleClick(i)}
-          winSquares={winner ? winner.winSquares : null}
+          onClick={(i: number) => handleClick(i)}
+          winSquares={winner ? winner.winSquares : []}
         />
       </div>
       <div className="game-info">
